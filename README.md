@@ -2,22 +2,22 @@
 
 An innovative multimodal AI system that converts speech into real-time visual representations, bridging the gap between voice input and creative content generation.
 
-> **📋 Requirements Compliance: 89% Complete** - See [REQUIREMENTS_COMPLIANCE.md](./REQUIREMENTS_COMPLIANCE.md) for detailed SRS analysis.
+> ** Requirements Compliance: 89% Complete** - See [REQUIREMENTS_COMPLIANCE.md](./REQUIREMENTS_COMPLIANCE.md) for detailed SRS analysis.
 
-## 🎯 Features
+##  Features
 
-- **🎤 Voice-to-Visual**: Speak to generate sketches, diagrams, or concept illustrations
-- **🧠 Advanced Speech Recognition**: Google Speech API with Web Speech API fallback (>90% accuracy)
-- **🎨 AI Image Generation**: OpenAI DALL-E 3 with Stability AI fallback
-- **⚡ Real-time Processing**: Visuals generated within 3-7 seconds (meets 5-10s SRS requirement)
-- **♿ Accessibility Focused**: Hands-free creation with screen reader support
-- **📱 Cross-Platform Compatible**: Web-based, works on Windows, macOS, Linux
-- **💾 Session History**: Save and revisit your voice-to-visual creations
-- **🔒 Privacy-First**: Temporary audio processing, no persistent voice data storage
-- **🎭 Multiple Art Styles**: Supports realistic, cartoon, sketch, painting styles via prompts
-- **🌐 Modern Architecture**: React.js frontend, Python Flask backend, WebSocket real-time communication
+- ** Voice-to-Visual**: Speak to generate sketches, diagrams, or concept illustrations
+- **Advanced Speech Recognition**: Google Speech API with Web Speech API fallback (>90% accuracy)
+- ** AI Image Generation**: OpenAI DALL-E 3 with Stability AI fallback
+- ** Real-time Processing**: Visuals generated within 3-7 seconds (meets 5-10s SRS requirement)
+- ** Accessibility Focused**: Hands-free creation with screen reader support
+- ** Cross-Platform Compatible**: Web-based, works on Windows, macOS, Linux
+- ** Session History**: Save and revisit your voice-to-visual creations
+- ** Privacy-First**: Temporary audio processing, no persistent voice data storage
+- ** Multiple Art Styles**: Supports realistic, cartoon, sketch, painting styles via prompts
+- ** Modern Architecture**: React.js frontend, Python Flask backend, WebSocket real-time communication
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 
@@ -68,7 +68,7 @@ An innovative multimodal AI system that converts speech into real-time visual re
 6. **Open your browser**
    Navigate to `http://localhost:3000`
 
-## 🏗️ System Architecture
+## System Architecture
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
@@ -86,11 +86,11 @@ An innovative multimodal AI system that converts speech into real-time visual re
 
 This project implements **89% of the specified SRS requirements**:
 
-### ✅ **Fully Implemented (100% Complete)**
+### **Fully Implemented (100% Complete)**
 - **Functional Requirements**: Voice input, speech-to-text, NLP processing, AI image generation, UI display, real-time processing, error handling
 - **Performance Requirements**: 3-7 second response time (target: 5-10s), >90% speech accuracy, low latency, graceful error recovery
 
-### ⚠️ **Mostly Complete (85% Complete)**
+### **Mostly Complete (85% Complete)**
 - **Non-Functional Requirements**: Cross-platform compatibility, security, scalability foundation, maintainability, some extensibility features
 
 ### 🔧 **Areas for Future Enhancement**
@@ -132,7 +132,7 @@ You can also type descriptions instead of speaking:
 - Character concepts for stories
 - Educational illustrations
 
-## 🎨 Customization
+## Customization
 
 ### Image Styles
 - **Realistic** - Photographic quality
@@ -203,14 +203,14 @@ export FLASK_ENV=production
 gunicorn --bind 0.0.0.0:5000 app:app
 ```
 
-## 🐳 Docker Deployment
+##  Docker Deployment
 
 ```bash
 # Build and run with Docker Compose
 docker-compose up --build
 ```
 
-## 📊 Performance
+##  Performance
 
 - **Speech Recognition**: < 2 seconds
 - **Image Generation**: 3-10 seconds (depending on model)
@@ -218,7 +218,7 @@ docker-compose up --build
 - **Supported Languages**: English (primary), expandable
 - **Concurrent Users**: Up to 50 (with proper scaling)
 
-## 🚧 Limitations
+##  Limitations
 
 - Currently optimized for English language input
 - Handles one visual concept per sentence optimally
@@ -226,7 +226,7 @@ docker-compose up --build
 - Requires internet connection for cloud-based AI services
 - Processing time varies based on server load
 
-## 🔮 Future Enhancements
+##  Future Enhancements
 
 - [ ] **Multi-language Support** - Support for Spanish, French, German
 - [ ] **Mobile App** - Native iOS and Android applications
@@ -237,7 +237,7 @@ docker-compose up --build
 - [ ] **Export Options** - SVG, PDF, high-resolution formats
 - [ ] **Integration APIs** - Embed in other applications
 
-## 🤝 Contributing
+##  Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
@@ -251,14 +251,14 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙋‍♀️ Support
+## Support
 
 - **Documentation**: [Wiki](https://github.com/yourusername/echosketch/wiki)
 - **Issues**: [GitHub Issues](https://github.com/yourusername/echosketch/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/yourusername/echosketch/discussions)
 - **Email**: echosketch-support@yourcompany.com
 
-## 🌟 Acknowledgments
+##  Acknowledgments
 
 - OpenAI for DALL-E API
 - Google for Speech-to-Text services
@@ -268,6 +268,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Built with ❤️ for accessible creativity**
+**Built with for accessible creativity**
 
 *Transform your voice into visuals with ECHOSKETCH - where words become art!*
