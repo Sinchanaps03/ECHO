@@ -10,6 +10,7 @@ import ImageDisplay from './components/ImageDisplay';
 import ControlPanel from './components/ControlPanel';
 import SessionHistory from './components/SessionHistory';
 import LoadingSpinner from './components/LoadingSpinner';
+import Analytics from './components/Analytics';
 
 // Import services
 import SocketService from './services/SocketService';
@@ -27,6 +28,7 @@ function App() {
   const [currentSession, setCurrentSession] = useState(null);
   const [sessionHistory, setSessionHistory] = useState([]);
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const [settings, setSettings] = useState({
     imageStyle: 'illustration',
     imageSize: '512x512',
@@ -226,6 +228,7 @@ function App() {
               settings={settings}
               onSettingsUpdate={handleSettingsUpdate}
               onClearSession={handleClearSession}
+              onShowAnalytics={() => setShowAnalytics(true)}
             />
           </div>
 
@@ -294,6 +297,12 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Analytics Modal */}
+      <Analytics 
+        isOpen={showAnalytics}
+        onClose={() => setShowAnalytics(false)}
+      />
     </div>
   );
 }

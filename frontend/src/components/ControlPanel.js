@@ -1,8 +1,8 @@
 import React from 'react';
-import { FiTrash2, FiSettings, FiRefreshCw } from 'react-icons/fi';
+import { FiTrash2, FiBarChart2 } from 'react-icons/fi';
 import './ControlPanel.css';
 
-const ControlPanel = ({ currentSession, settings, onSettingsUpdate, onClearSession }) => {
+const ControlPanel = ({ currentSession, settings, onSettingsUpdate, onClearSession, onShowAnalytics }) => {
   return (
     <div className="control-panel card">
       <div className="panel-header">
@@ -20,6 +20,13 @@ const ControlPanel = ({ currentSession, settings, onSettingsUpdate, onClearSessi
             >
               <FiTrash2 size={16} />
               Clear Session
+            </button>
+            <button 
+              className="control-btn info"
+              onClick={onShowAnalytics}
+            >
+              <FiBarChart2 size={16} />
+              Analytics
             </button>
           </div>
         </div>

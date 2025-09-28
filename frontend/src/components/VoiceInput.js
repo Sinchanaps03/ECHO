@@ -15,6 +15,8 @@ const VoiceInput = ({
   const [inputMode, setInputMode] = useState('voice'); // 'voice' or 'text'
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioLevel, setAudioLevel] = useState(0);
+  const [recognition, setRecognition] = useState(null);
+  const [interimTranscript, setInterimTranscript] = useState('');
   
   const mediaRecorderRef = useRef(null);
   const streamRef = useRef(null);
@@ -24,13 +26,63 @@ const VoiceInput = ({
 
   // Cleanup on unmount
   useEffect(() => {
+    // Initialize Web Speech API
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognitionInstance = new SpeechRecognition();
+      
+      recognitionInstance.continuous = true;
+      recognitionInstance.interimResults = true;
+      recognitionInstance.lang = 'en-US';
+      
+      recognitionInstance.onstart = () => {
+        console.log('Speech recognition started');
+      };
+      
+      recognitionInstance.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+        
+        setInterimTranscript(interimTranscript);
+        
+        if (finalTranscript) {
+          // Send the final transcript to the parent component
+          onTextSubmit(finalTranscript.trim());
+        }
+      };
+      
+      recognitionInstance.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        if (event.error === 'no-speech') {
+          console.log('No speech detected');
+        }
+      };
+      
+      recognitionInstance.onend = () => {
+        console.log('Speech recognition ended');
+        setInterimTranscript('');
+        onStopRecording();
+      };
+      
+      setRecognition(recognitionInstance);
+    }
+    
     return () => {
       stopRecording();
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
     };
-  }, []);
+  }, [onTextSubmit, onStopRecording]);
 
   // Timer effect for recording
   useEffect(() => {
@@ -55,6 +107,17 @@ const VoiceInput = ({
 
   const startRecording = async () => {
     try {
+      // Use Web Speech API if available
+      if (recognition) {
+        console.log('Starting speech recognition...');
+        recognition.start();
+        onStartRecording();
+        return;
+      }
+      
+      console.log('Web Speech API not available, using RecordRTC fallback');
+      
+      // Fallback to RecordRTC for audio recording (original implementation)
       // Get user media
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
@@ -108,6 +171,18 @@ const VoiceInput = ({
   };
 
   const stopRecording = () => {
+    // Stop Web Speech API if being used
+    if (recognition) {
+      try {
+        recognition.stop();
+        console.log('Stopped speech recognition');
+        return;
+      } catch (error) {
+        console.error('Error stopping speech recognition:', error);
+      }
+    }
+    
+    // Stop RecordRTC recording (fallback)
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stopRecording(() => {
         const audioBlob = mediaRecorderRef.current.getBlob();
@@ -231,11 +306,17 @@ const VoiceInput = ({
               <div className="recording-info">
                 <div className="recording-indicator">
                   <div className="pulse-dot"></div>
-                  Recording...
+                  {recognition ? 'Listening...' : 'Recording...'}
                 </div>
                 <div className="recording-time">
                   {formatTime(recordingTime)}
                 </div>
+                {/* Show interim transcript if available */}
+                {interimTranscript && (
+                  <div className="interim-transcript">
+                    <em>"{interimTranscript}"</em>
+                  </div>
+                )}
               </div>
             )}
             

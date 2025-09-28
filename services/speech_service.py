@@ -15,6 +15,15 @@ class SpeechService:
                 logger.info("Google Cloud Speech client initialized")
             except Exception as e:
                 logger.warning(f"Could not initialize Google Cloud Speech: {e}")
+        
+        # Initialize SpeechRecognition as fallback
+        self.sr_recognizer = None
+        try:
+            import speech_recognition as sr
+            self.sr_recognizer = sr.Recognizer()
+            logger.info("SpeechRecognition library initialized as fallback")
+        except ImportError:
+            logger.warning("SpeechRecognition library not available")
     
     def speech_to_text(self, audio_file_path):
         """
@@ -24,6 +33,9 @@ class SpeechService:
             # First try with Google Cloud Speech API if available
             if self.google_client:
                 return self._google_speech_to_text(audio_file_path)
+            # Then try with SpeechRecognition library
+            elif self.sr_recognizer:
+                return self._speechrecognition_to_text(audio_file_path)
             else:
                 # For demo purposes, return a placeholder response
                 logger.warning("No speech recognition service available. Using placeholder.")
@@ -31,7 +43,44 @@ class SpeechService:
                 
         except Exception as e:
             logger.error(f"Error in speech to text conversion: {e}")
+            # Try fallback if primary method fails
+            if self.sr_recognizer and not self.google_client:
+                try:
+                    return self._speechrecognition_to_text(audio_file_path)
+                except:
+                    pass
             return None
+    
+    def _speechrecognition_to_text(self, audio_file_path):
+        """
+        Use SpeechRecognition library for transcription
+        """
+        try:
+            import speech_recognition as sr
+            from pydub import AudioSegment
+            
+            logger.info("Converting audio with SpeechRecognition library...")
+            
+            # Convert WebM to WAV for SpeechRecognition
+            audio = AudioSegment.from_file(audio_file_path)
+            wav_path = audio_file_path.replace('.webm', '.wav')
+            audio.export(wav_path, format="wav")
+            
+            # Use SpeechRecognition
+            with sr.AudioFile(wav_path) as source:
+                audio_data = self.sr_recognizer.record(source)
+                text = self.sr_recognizer.recognize_google(audio_data)
+                
+            # Clean up temporary WAV file
+            if os.path.exists(wav_path):
+                os.remove(wav_path)
+                
+            logger.info(f"SpeechRecognition transcription successful: {text[:50]}...")
+            return text
+            
+        except Exception as e:
+            logger.error(f"Error in SpeechRecognition transcription: {e}")
+            raise e
     
     def _google_speech_to_text(self, audio_file_path):
         """

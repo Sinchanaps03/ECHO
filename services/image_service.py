@@ -4,60 +4,106 @@ import logging
 import os
 import random
 import requests
+import json
 from PIL import Image, ImageDraw, ImageFont
-from openai import OpenAI
+
+# Try to import OpenAI, handle gracefully if not available
+try:
+    from openai import OpenAI
+    OPENAI_AVAILABLE = True
+except (ImportError, Exception):
+    OPENAI_AVAILABLE = False
+    OpenAI = None
+
+# Try to import diffusers for Stable Diffusion
+try:
+    from diffusers import StableDiffusionPipeline
+    import torch
+    DIFFUSERS_AVAILABLE = True
+except (ImportError, Exception):
+    DIFFUSERS_AVAILABLE = False
+    StableDiffusionPipeline = None
+    torch = None
 
 class ImageService:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         
-        # Initialize OpenAI API
+        # Initialize OpenAI API if available
         self.openai_api_key = os.getenv('OPENAI_API_KEY')
-        if self.openai_api_key:
-            self.client = OpenAI(api_key=self.openai_api_key)
-            self.logger.info("OpenAI API initialized")
+        if self.openai_api_key and OPENAI_AVAILABLE:
+            try:
+                self.client = OpenAI(api_key=self.openai_api_key)
+                self.logger.info("✅ OpenAI DALL-E API initialized successfully")
+            except Exception as e:
+                self.logger.warning(f"Failed to initialize OpenAI: {e}")
+                self.client = None
         else:
             self.client = None
-            self.logger.warning("OpenAI API key not found")
+            if not OPENAI_AVAILABLE:
+                self.logger.info("OpenAI not available, using fallback image generation")
+            else:
+                self.logger.warning("OpenAI API key not found")
+        
+        # Initialize Stable Diffusion if available
+        self.sd_pipeline = None
+        if DIFFUSERS_AVAILABLE and torch and torch.cuda.is_available():
+            try:
+                self.logger.info("Initializing Stable Diffusion pipeline...")
+                self.sd_pipeline = StableDiffusionPipeline.from_pretrained(
+                    "runwayml/stable-diffusion-v1-5",
+                    torch_dtype=torch.float16
+                ).to("cuda")
+                self.sd_pipeline.enable_memory_efficient_attention()
+                self.logger.info("Stable Diffusion pipeline initialized")
+            except Exception as e:
+                self.logger.warning(f"Failed to initialize Stable Diffusion: {e}")
+                self.sd_pipeline = None
+        elif DIFFUSERS_AVAILABLE:
+            try:
+                self.logger.info("Initializing Stable Diffusion pipeline (CPU)...")
+                self.sd_pipeline = StableDiffusionPipeline.from_pretrained(
+                    "runwayml/stable-diffusion-v1-5"
+                )
+                self.logger.info("Stable Diffusion pipeline initialized (CPU)")
+            except Exception as e:
+                self.logger.warning(f"Failed to initialize Stable Diffusion: {e}")
+                self.sd_pipeline = None
         
         self.logger.info("Image service initialized")
     
     def generate_dalle_image(self, prompt, size="1024x1024"):
-        """Generate image using DALL-E"""
+        """Generate image using DALL-E with base64 response (like the reference repo)"""
         try:
             if not self.client:
                 self.logger.warning("OpenAI API key not configured")
                 return None
             
-            self.logger.info(f"Generating DALL-E image for prompt: {prompt}")
+            self.logger.info(f"🎨 Generating DALL-E image for prompt: {prompt[:50]}...")
             
+            # Use the same approach as the reference repository
             response = self.client.images.generate(
                 model="dall-e-3",
                 prompt=prompt,
                 size=size,
                 quality="standard",
+                response_format="b64_json",  # Get base64 directly like the reference
                 n=1,
             )
             
-            image_url = response.data[0].url
-            self.logger.info(f"DALL-E image generated successfully: {image_url}")
-            
-            # Download the image
-            image_response = requests.get(image_url)
-            image_response.raise_for_status()
-            
-            # Convert to base64
-            image_data = base64.b64encode(image_response.content).decode()
+            # Extract base64 image data directly
+            image_b64 = response.data[0].b64_json
+            self.logger.info("✅ DALL-E image generated successfully with base64 format")
             
             return {
                 'success': True,
-                'image_data': f"data:image/png;base64,{image_data}",
-                'url': image_url,
-                'service': 'dalle'
+                'image_data': f"data:image/png;base64,{image_b64}",
+                'service': 'dalle',
+                'model': 'dall-e-3'
             }
             
         except Exception as e:
-            self.logger.error(f"Error generating DALL-E image: {e}")
+            self.logger.error(f"❌ Error generating DALL-E image: {e}")
             return None
     
     def generate_stability_ai_image(self, prompt, size="512x512"):
@@ -100,6 +146,43 @@ class ImageService:
             
         except Exception as e:
             self.logger.error(f"Error generating Stability AI image: {e}")
+            return None
+    
+    def generate_stable_diffusion_image(self, prompt, size="512x512"):
+        """Generate image using local Stable Diffusion model"""
+        try:
+            if not self.sd_pipeline:
+                self.logger.warning("Stable Diffusion pipeline not available")
+                return None
+            
+            self.logger.info(f"Generating Stable Diffusion image for prompt: {prompt}")
+            
+            # Parse size
+            width, height = map(int, size.split('x'))
+            
+            # Generate image
+            with torch.autocast("cuda" if torch.cuda.is_available() else "cpu"):
+                image = self.sd_pipeline(
+                    prompt=prompt,
+                    width=width,
+                    height=height,
+                    num_inference_steps=20,
+                    guidance_scale=7.5
+                ).images[0]
+            
+            # Convert to base64
+            buffered = io.BytesIO()
+            image.save(buffered, format="PNG")
+            image_data = base64.b64encode(buffered.getvalue()).decode()
+            
+            return {
+                'success': True,
+                'image_data': f"data:image/png;base64,{image_data}",
+                'service': 'stable_diffusion'
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Error generating Stable Diffusion image: {e}")
             return None
     
     def create_placeholder_image(self, prompt, size="512x512"):
@@ -170,6 +253,8 @@ class ImageService:
             
             if preferred_service == 'dalle' or not preferred_service:
                 services.append(self.generate_dalle_image)
+            if preferred_service == 'stable_diffusion' or not preferred_service:
+                services.append(self.generate_stable_diffusion_image)
             if preferred_service == 'stability' or not preferred_service:
                 services.append(self.generate_stability_ai_image)
             

@@ -12,13 +12,14 @@ class DatabaseService:
         self.client = None
         self.db = None
         self.collection = None
+        self.connected = False
         
         try:
             # Get MongoDB URI from environment
             mongo_uri = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/echosketch')
             
-            # Connect to MongoDB
-            self.client = MongoClient(mongo_uri)
+            # Connect to MongoDB with timeout
+            self.client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
             
             # Get database (will be created if doesn't exist)
             db_name = mongo_uri.split('/')[-1] if '/' in mongo_uri else 'echosketch'
@@ -29,12 +30,14 @@ class DatabaseService:
             
             # Test connection
             self.client.admin.command('ismaster')
+            self.connected = True
             logger.info(f"Connected to MongoDB: {db_name}")
             
         except Exception as e:
             logger.warning(f"Could not connect to MongoDB: {e}")
             logger.info("Running without database persistence")
             self.client = None
+            self.connected = False
     
     def save_session(self, session_data: dict) -> str:
         """Save session data to database"""
@@ -227,4 +230,11 @@ class DatabaseService:
     
     def __del__(self):
         """Cleanup when object is destroyed"""
-        self.close_connection()
+        try:
+            # Only attempt to close if we're not shutting down
+            import sys
+            if not hasattr(sys, '_called_from_test') and hasattr(self, 'client') and self.client:
+                self.client.close()
+        except:
+            # Silently ignore errors during interpreter shutdown
+            pass
