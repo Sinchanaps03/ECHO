@@ -88,26 +88,38 @@ def update_analytics(session_data, response_time=None, accuracy=None):
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Health check endpoint
 @app.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
     return jsonify({'status': 'healthy', 'message': 'ECHOSKETCH API is running'})
 
-# Serve React App (catch-all route)
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve_react_app(path):
-    """Serve the React application"""
-    build_path = os.path.join('frontend', 'build')
-    
-    # Skip API routes - let them be handled by their specific routes
-    if path.startswith('api/'):
-        return "Not found", 404
-    
-    if path != "" and os.path.exists(os.path.join(build_path, path)):
-        return send_from_directory(build_path, path)
-    else:
-        return send_file(os.path.join(build_path, 'index.html'))
+# API root endpoint - show available endpoints
+@app.route('/', methods=['GET'])
+def api_root():
+    """API root - show available endpoints"""
+    return jsonify({
+        'message': 'ECHOSKETCH API - Voice to Visuals',
+        'status': 'running',
+        'endpoints': {
+            'health': '/health',
+            'text_to_image': '/api/text-to-image',
+            'process_voice': '/api/process-voice',
+            'analytics': '/api/analytics',
+            'session_history': '/api/session-history'
+        },
+        'version': '1.0.0',
+        'deployed_on': 'Render'
+    })
+
+# Serve static files if they exist (optional)
+@app.route('/<path:filename>')
+def serve_static(filename):
+    """Serve static files or return 404"""
+    try:
+        return send_from_directory('static', filename)
+    except:
+        return jsonify({'error': 'File not found'}), 404
 
 @app.route('/api/process-voice', methods=['POST'])
 def process_voice():
