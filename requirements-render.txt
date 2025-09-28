@@ -1,3 +1,4 @@
+# Render-optimized requirements - minimal and stable versions
 Flask==2.3.3
 Flask-CORS==4.0.0
 Flask-SocketIO==5.3.4
@@ -12,3 +13,10 @@ Pillow==10.0.1
 numpy==1.24.3
 pymongo==4.5.0
 gunicorn==21.2.0
+
+# Optional AI libraries - install only if needed
+# transformers==4.33.2
+# torch==2.0.1+cpu
+# torchvision==0.15.2+cpu
+# diffusers==0.21.2
+# accelerate==0.23.0
