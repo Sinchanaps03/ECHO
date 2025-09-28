@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECHOSKETCH - Voice to Visuals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin: 20px 0;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #4a5568;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .api-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 5px solid #4299e1;
+        }
+        
+        .api-section h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .input-group input:focus, .input-group textarea:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #4299e1, #667eea);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(66, 153, 225, 0.3);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #edf2f7;
+            border-radius: 15px;
+            display: none;
+        }
+        
+        .results.show {
+            display: block;
+        }
+        
+        .results h4 {
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+        
+        .generated-image {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            margin: 15px 0;
+        }
+        
+        .concepts {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        
+        .concept-item {
+            margin: 8px 0;
+            padding: 5px 10px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #4299e1;
+            font-size: 18px;
+            margin: 20px 0;
+        }
+        
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #48bb78;
+            color: white;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .endpoint-list {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        
+        .endpoint-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-left: 3px solid #4299e1;
+            background: #f7fafc;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 ECHOSKETCH</h1>
+            <p>Transform your words into stunning visuals with AI</p>
+            <span class="status-badge">🚀 Live on Render</span>
+        </div>
+
+        <div class="api-section">
+            <h3>🖼️ Text to Image Generator</h3>
+            <p>Describe what you want to see, and our AI will create it for you!</p>
+            
+            <div class="input-group">
+                <label for="textInput">Enter your description:</label>
+                <textarea 
+                    id="textInput" 
+                    placeholder="e.g., A magical forest with glowing crystal trees under a starlit sky..."
+                    rows="3"
+                ></textarea>
+            </div>
+            
+            <button class="btn" onclick="generateImage()" id="generateBtn">
+                ✨ Generate Image
+            </button>
+            
+            <div id="loading" class="loading" style="display: none;">
+                🎨 Creating your masterpiece...
+            </div>
+            
+            <div id="error" class="error" style="display: none;"></div>
+            
+            <div id="results" class="results">
+                <h4>🎯 Generated Results:</h4>
+                <div id="imageContainer"></div>
+                <div id="conceptsContainer"></div>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h3>📊 API Information</h3>
+            <p>Your ECHOSKETCH API is running with these endpoints:</p>
+            
+            <div class="endpoint-list">
+                <div class="endpoint-item">
+                    <strong>🏠 Root:</strong> https://echo-3-evp1.onrender.com
+                </div>
+                <div class="endpoint-item">
+                    <strong>❤️ Health:</strong> https://echo-3-evp1.onrender.com/health
+                </div>
+                <div class="endpoint-item">
+                    <strong>🎨 Text to Image:</strong> https://echo-3-evp1.onrender.com/api/text-to-image
+                </div>
+                <div class="endpoint-item">
+                    <strong>🗣️ Voice Processing:</strong> https://echo-3-evp1.onrender.com/api/process-voice
+                </div>
+                <div class="endpoint-item">
+                    <strong>📊 Analytics:</strong> https://echo-3-evp1.onrender.com/api/analytics
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://echo-3-evp1.onrender.com';
+        
+        async function generateImage() {
+            const textInput = document.getElementById('textInput');
+            const generateBtn = document.getElementById('generateBtn');
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const results = document.getElementById('results');
+            const imageContainer = document.getElementById('imageContainer');
+            const conceptsContainer = document.getElementById('conceptsContainer');
+            
+            const text = textInput.value.trim();
+            
+            if (!text) {
+                showError('Please enter a description first!');
+                return;
+            }
+            
+            // Show loading state
+            generateBtn.disabled = true;
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            results.classList.remove('show');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/text-to-image`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    throw new Error(data.error || 'Failed to generate image');
+                }
+                
+            } catch (err) {
+                console.error('Error:', err);
+                showError(`Failed to generate image: ${err.message}`);
+            } finally {
+                generateBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+        
+        function displayResults(data) {
+            const imageContainer = document.getElementById('imageContainer');
+            const conceptsContainer = document.getElementById('conceptsContainer');
+            const results = document.getElementById('results');
+            
+            // Display image
+            if (data.image_data && data.image_data.image_data) {
+                imageContainer.innerHTML = `
+                    <img src="${data.image_data.image_data}" alt="Generated Image" class="generated-image">
+                    <p><strong>🎨 Generated by:</strong> ${data.image_data.service || 'AI'}</p>
+                `;
+            }
+            
+            // Display concepts
+            if (data.visual_concepts) {
+                const concepts = data.visual_concepts;
+                conceptsContainer.innerHTML = `
+                    <div class="concepts">
+                        <h4>🧠 AI Analysis:</h4>
+                        <div><strong>💭 Mood:</strong> <span class="concept-item">${concepts.mood || 'N/A'}</span></div>
+                        <div><strong>😊 Sentiment:</strong> <span class="concept-item">${concepts.sentiment || 'N/A'}</span></div>
+                        <div><strong>🎭 Style:</strong> <span class="concept-item">${concepts.style || 'N/A'}</span></div>
+                        ${concepts.objects && concepts.objects.length ? 
+                            `<div><strong>🏷️ Objects:</strong> ${concepts.objects.map(obj => `<span class="concept-item">${obj}</span>`).join('')}</div>` : ''}
+                        ${concepts.colors && concepts.colors.length ? 
+                            `<div><strong>🌈 Colors:</strong> ${concepts.colors.map(color => `<span class="concept-item">${color}</span>`).join('')}</div>` : ''}
+                    </div>
+                `;
+            }
+            
+            results.classList.add('show');
+        }
+        
+        function showError(message) {
+            const error = document.getElementById('error');
+            error.textContent = message;
+            error.style.display = 'block';
+        }
+        
+        // Allow Enter key to generate
+        document.getElementById('textInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                generateImage();
+            }
+        });
+        
+        // Add some example prompts
+        function setExample(text) {
+            document.getElementById('textInput').value = text;
+        }
+    </script>
+</body>
+</html>

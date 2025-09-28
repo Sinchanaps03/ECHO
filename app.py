@@ -94,10 +94,33 @@ def health_check():
     """Health check endpoint"""
     return jsonify({'status': 'healthy', 'message': 'ECHOSKETCH API is running'})
 
-# API root endpoint - show available endpoints
+# API root endpoint - serve the web interface
 @app.route('/', methods=['GET'])
 def api_root():
-    """API root - show available endpoints"""
+    """Serve the web interface for users"""
+    try:
+        # Try to serve the HTML interface first
+        return send_file('index.html')
+    except:
+        # Fallback to JSON API info
+        return jsonify({
+            'message': 'ECHOSKETCH API - Voice to Visuals',
+            'status': 'running',
+            'endpoints': {
+                'health': '/health',
+                'text_to_image': '/api/text-to-image',
+                'process_voice': '/api/process-voice',
+                'analytics': '/api/analytics',
+                'session_history': '/api/session-history'
+            },
+            'version': '1.0.0',
+            'deployed_on': 'Render'
+        })
+
+# API info endpoint - JSON response for developers
+@app.route('/api', methods=['GET'])
+def api_info():
+    """API information endpoint"""
     return jsonify({
         'message': 'ECHOSKETCH API - Voice to Visuals',
         'status': 'running',
