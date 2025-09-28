@@ -5,7 +5,14 @@ import os
 import random
 import requests
 import json
-from PIL import Image, ImageDraw, ImageFont
+
+# Try to import PIL (Pillow), handle gracefully if not available
+try:
+    from PIL import Image, ImageDraw, ImageFont
+    PIL_AVAILABLE = True
+except (ImportError, Exception):
+    PIL_AVAILABLE = False
+    Image = ImageDraw = ImageFont = None
 
 # Try to import OpenAI, handle gracefully if not available
 try:
