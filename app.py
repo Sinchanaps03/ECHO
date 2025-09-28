@@ -94,145 +94,25 @@ def health_check():
     """Health check endpoint"""
     return jsonify({'status': 'healthy', 'message': 'ECHOSKETCH API is running'})
 
-# API root endpoint - serve the web interface
+# API root endpoint - show available endpoints for API users
 @app.route('/', methods=['GET'])
 def api_root():
-    """Serve the web interface for users"""
-    html_content = '''<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ECHOSKETCH - Voice to Visuals</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333; min-height: 100vh; display: flex;
-            flex-direction: column; align-items: center; padding: 20px;
-        }
-        .container {
-            max-width: 800px; width: 100%; background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            padding: 30px; margin: 20px 0;
-        }
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h1 {
-            color: #4a5568; font-size: 2.5rem; margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .api-section {
-            background: #f8f9fa; border-radius: 15px; padding: 25px;
-            margin: 20px 0; border-left: 5px solid #4299e1;
-        }
-        .input-group { margin-bottom: 20px; }
-        .input-group textarea {
-            width: 100%; padding: 12px; border: 2px solid #e2e8f0;
-            border-radius: 8px; font-size: 16px;
-        }
-        .btn {
-            background: linear-gradient(135deg, #4299e1, #667eea);
-            color: white; border: none; padding: 12px 24px;
-            border-radius: 8px; cursor: pointer; font-size: 16px;
-            font-weight: 600; margin: 5px;
-        }
-        .btn:hover { transform: translateY(-2px); }
-        .results { margin-top: 30px; padding: 20px; background: #edf2f7; border-radius: 15px; display: none; }
-        .results.show { display: block; }
-        .generated-image { max-width: 100%; border-radius: 10px; margin: 15px 0; }
-        .status-badge {
-            display: inline-block; padding: 4px 12px; background: #48bb78;
-            color: white; border-radius: 20px; font-size: 12px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🎨 ECHOSKETCH</h1>
-            <p>Transform your words into stunning visuals with AI</p>
-            <span class="status-badge">🚀 Live on Render</span>
-        </div>
-        
-        <div class="api-section">
-            <h3>🖼️ Text to Image Generator</h3>
-            <p>Describe what you want to see, and our AI will create it!</p>
-            
-            <div class="input-group">
-                <textarea id="textInput" placeholder="e.g., A magical forest with glowing crystal trees..." rows="3"></textarea>
-            </div>
-            
-            <button class="btn" onclick="generateImage()">✨ Generate Image</button>
-            
-            <div id="loading" style="display: none; text-align: center; margin: 20px;">
-                🎨 Creating your masterpiece...
-            </div>
-            
-            <div id="results" class="results">
-                <h4>🎯 Generated Results:</h4>
-                <div id="imageContainer"></div>
-                <div id="conceptsContainer"></div>
-            </div>
-        </div>
-        
-        <div class="api-section">
-            <h3>📊 API Endpoints</h3>
-            <p>Your ECHOSKETCH API is running with these endpoints:</p>
-            <ul>
-                <li><strong>Health:</strong> <a href="/health">/health</a></li>
-                <li><strong>Text to Image:</strong> /api/text-to-image</li>
-                <li><strong>Analytics:</strong> <a href="/api/analytics">/api/analytics</a></li>
-            </ul>
-        </div>
-    </div>
-    
-    <script>
-        async function generateImage() {
-            const textInput = document.getElementById('textInput');
-            const loading = document.getElementById('loading');
-            const results = document.getElementById('results');
-            const imageContainer = document.getElementById('imageContainer');
-            
-            const text = textInput.value.trim();
-            if (!text) { alert('Please enter a description!'); return; }
-            
-            loading.style.display = 'block';
-            results.classList.remove('show');
-            
-            try {
-                const response = await fetch('/api/text-to-image', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: text })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success && data.image_data) {
-                    imageContainer.innerHTML = `
-                        <img src="${data.image_data.image_data}" alt="Generated Image" class="generated-image">
-                        <p><strong>Generated successfully!</strong></p>
-                        <p><strong>Mood:</strong> ${data.visual_concepts?.mood || 'N/A'}</p>
-                        <p><strong>Style:</strong> ${data.visual_concepts?.style || 'N/A'}</p>
-                    `;
-                    results.classList.add('show');
-                } else {
-                    imageContainer.innerHTML = '<p>❌ Failed to generate image. Please try again.</p>';
-                    results.classList.add('show');
-                }
-            } catch (err) {
-                imageContainer.innerHTML = `<p>❌ Error: ${err.message}</p>`;
-                results.classList.add('show');
-            }
-            
-            loading.style.display = 'none';
-        }
-    </script>
-</body>
-</html>'''
-    
-    return html_content
+    """API root - show available endpoints"""
+    return jsonify({
+        'message': 'ECHOSKETCH API - Voice to Visuals',
+        'status': 'running',
+        'frontend': 'Advanced React app available at localhost:3001',
+        'endpoints': {
+            'health': '/health',
+            'text_to_image': '/api/text-to-image',
+            'process_voice': '/api/process-voice',
+            'analytics': '/api/analytics',
+            'session_history': '/api/session-history'
+        },
+        'version': '1.0.0',
+        'deployed_on': 'Render',
+        'note': 'This is the backend API. Use your React frontend for the full experience!'
+    })
 
 # API info endpoint - JSON response for developers
 @app.route('/api', methods=['GET'])
